@@ -1,0 +1,10 @@
+python main.py \
+--model vgg3d13 \
+--device cuda \
+--epoch 100 \
+--random_state 42 \
+--batch_size 64 \
+--data_dir /home/tsubasa/Competition/Rikkyo/DeePLearningCompetition/data \
+--save_dir /home/tsubasa/Competition/Rikkyo/DeePLearningCompetition/result/custom/vgg3d13/relu/lr1e-3 \
+--train_size 0.7 \
+--learning_rate 0.001 \
