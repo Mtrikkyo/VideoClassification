@@ -1,9 +1,9 @@
-python main.py \
+python3 main.py \
 --model xception \
 --device cuda \
 --epoch 100 \
 --random_state 42 \
---batch_size 64 \
+--batch_size 32 \
 --data_dir /Data/data \
 --save_dir /Data/result \
 --train_size 0.7 \
