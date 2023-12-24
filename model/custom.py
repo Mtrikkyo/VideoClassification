@@ -55,7 +55,7 @@ class ResidualBlock(nn.Module):
         self,
         in_channels,
         out_channels,
-        middle_channels=512,
+        middle_channels=64,
         kernel_size=3,
         stride=1,
         padding=1,
