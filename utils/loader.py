@@ -19,7 +19,9 @@ class TrainValidDataset(Dataset):
                 v2.ToDtype(torch.float32, scale=True),
                 v2.Lambda(lambda x: x.permute(0, 3, 1, 2)),
                 v2.CenterCrop(size=(112, 112)),
-                v2.Normalize(mean=[0.43216, 0.394666, 0.37645], std=[0.22803, 0.22145, 0.216989]),
+                v2.Normalize(
+                    mean=[0.43216, 0.394666, 0.37645], std=[0.22803, 0.22145, 0.216989]
+                ),
                 v2.Lambda(lambda x: x.permute(1, 0, 2, 3)),
             ]
         )
@@ -51,7 +53,9 @@ class TestDataset(Dataset):
                 v2.ToDtype(torch.float32, scale=True),
                 v2.Lambda(lambda x: x.permute(0, 3, 1, 2)),
                 v2.CenterCrop(size=(112, 112)),
-                v2.Normalize(mean=[0.43216, 0.394666, 0.37645], std=[0.22803, 0.22145, 0.216989]),
+                v2.Normalize(
+                    mean=[0.43216, 0.394666, 0.37645], std=[0.22803, 0.22145, 0.216989]
+                ),
                 v2.Lambda(lambda x: x.permute(1, 0, 2, 3)),
             ]
         )
@@ -70,14 +74,17 @@ class TestDataset(Dataset):
         return X
 
 
-def train_valid_dataloader(args: argparse.Namespace) -> tuple[DataLoader, DataLoader]:
+def train_valid_dataloader(args: argparse.Namespace):
     # load
 
     # dataset
     train_dataset = TrainValidDataset(args)
 
     train_dataset, valid_dataset = train_test_split(
-        train_dataset, shuffle=True, random_state=args.random_state, train_size=args.train_size
+        train_dataset,
+        shuffle=True,
+        random_state=args.random_state,
+        train_size=args.train_size,
     )
 
     train_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True)
@@ -97,7 +104,11 @@ def test_dataloader(args=argparse.Namespace):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--batch_size", type=int, default=32)
-    parser.add_argument("--data_dir", type=str, default="/home/tsubasa/Competition/Rikkyo/DeePLearningCompetition/data")
+    parser.add_argument(
+        "--data_dir",
+        type=str,
+        default="/home/tsubasa/Competition/Rikkyo/DeePLearningCompetition/data",
+    )
     parser.add_argument("--train_size", type=float, default=0.7)
     parser.add_argument("--random_state", type=int, default=42)
 
