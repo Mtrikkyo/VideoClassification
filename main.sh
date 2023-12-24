@@ -5,6 +5,6 @@ python3 main.py \
 --random_state 42 \
 --batch_size 32 \
 --data_dir /Data/data \
---save_dir /Data/result \
+--save_dir /Data/result/custom/xception01 \
 --train_size 0.7 \
 --learning_rate 0.001 \
