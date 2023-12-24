@@ -4,7 +4,7 @@ from torch import nn
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
-
+import matplotlib.pyplot as plt
 
 import argparse
 import os
@@ -13,15 +13,17 @@ import os
 from utils.seed import seed_worker
 from utils.loader import train_valid_dataloader, test_dataloader
 from model.pretrain import ResNetR3D, ResNetR2Plus1D
-from model.vgg import VGG3D13
 
-import matplotlib.pyplot as plt
+# from model.vgg import VGG3D13
+from model.custom import TemporalXception
+
 
 # model list
 TRAINABLE_MODEL = {
     "r3d": ResNetR3D(),
     "r2plus1d": ResNetR2Plus1D(),
-    "vgg3d13": VGG3D13(),
+    # "vgg3d13": VGG3D13(),
+    "xception": TemporalXception(),
 }
 
 # class list
@@ -110,11 +112,20 @@ def predict_test(args: argparse.Namespace, model, test_loader):
 
             predict_row = outputs.cpu().numpy()
             all_predict_row.append(predict_row)
-            predict_class = [CLASS_LIST[index.item()] for index in torch.argmax(outputs, dim=1)]
+            predict_class = [
+                CLASS_LIST[index.item()] for index in torch.argmax(outputs, dim=1)
+            ]
             all_predict_class.extend(predict_class)
 
-    np.savetxt(f"{args.save_dir}/predict_row.csv", np.vstack(all_predict_row), delimiter=",")
-    np.savetxt(f"{args.save_dir}/predict.csv", np.array(all_predict_class), delimiter=",", fmt="%s")
+    np.savetxt(
+        f"{args.save_dir}/predict_row.csv", np.vstack(all_predict_row), delimiter=","
+    )
+    np.savetxt(
+        f"{args.save_dir}/predict.csv",
+        np.array(all_predict_class),
+        delimiter=",",
+        fmt="%s",
+    )
 
 
 def save_model_weight(args, epoch, model, history):
@@ -189,7 +200,12 @@ def main(args: argparse.Namespace):
             criterion=criterion,
         )
 
-        train_acc_per_epoch, train_loss_per_epoch, valid_acc_per_epoch, valid_loss_per_epoch = eval(
+        (
+            train_acc_per_epoch,
+            train_loss_per_epoch,
+            valid_acc_per_epoch,
+            valid_loss_per_epoch,
+        ) = eval(
             args=args,
             model=model,
             train_loader=train_loader,
@@ -217,14 +233,25 @@ def main(args: argparse.Namespace):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("--model", type=str, choices=["r3d", "r2plus1d", "vgg3d13"], default="r2plus1d")
-    parser.add_argument("--device", type=str, default="cuda")
+    parser.add_argument(
+        "--model",
+        type=str,
+        choices=["r3d", "r2plus1d", "vgg3d13", "xception"],
+        default="xception",
+    )
+    parser.add_argument("--device", type=str, choices=["cuda", "mps"], default="mps")
     parser.add_argument("--epoch", type=int, default=100)
     parser.add_argument("--random_state", type=int, default=42)
     parser.add_argument("--batch_size", type=int, default=32)
-    parser.add_argument("--data_dir", type=str, default="/home/tsubasa/Competition/Rikkyo/DeePLearningCompetition/data")
     parser.add_argument(
-        "--save_dir", type=str, default="/home/tsubasa/Competition/Rikkyo/DeePLearningCompetition/result/pre_train/r3d"
+        "--data_dir",
+        type=str,
+        default="/home/tsubasa/Competition/Rikkyo/DeePLearningCompetition/data",
+    )
+    parser.add_argument(
+        "--save_dir",
+        type=str,
+        default="/home/tsubasa/Competition/Rikkyo/DeePLearningCompetition/result/pre_train/r3d",
     )
     parser.add_argument("--train_size", type=float, default=0.7)
     parser.add_argument("--learning_rate", type=float, default=0.01)
