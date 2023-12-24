@@ -1,5 +1,5 @@
 python main.py \
---model vgg3d13 \
+--model xception \
 --device cuda \
 --epoch 100 \
 --random_state 42 \
