@@ -13,17 +13,14 @@ import os
 from utils.seed import seed_worker
 from utils.loader import train_valid_dataloader, test_dataloader
 from model.pretrain import ResNetR3D, ResNetR2Plus1D
-
-# from model.vgg import VGG3D13
-from model.custom import TemporalXception
+from model.custom import VideoXception
 
 
 # model list
 TRAINABLE_MODEL = {
-    "r3d": ResNetR3D(),
-    "r2plus1d": ResNetR2Plus1D(),
-    # "vgg3d13": VGG3D13(),
-    "xception": TemporalXception(),
+    "r3d": ResNetR3D(), # pretrain
+    "r2plus1d": ResNetR2Plus1D(), # pretrain
+    "xception": VideoXception(),
 }
 
 # class list
@@ -79,7 +76,7 @@ def eval(args: argparse.Namespace, model, train_loader, valid_loader, criterion)
             loss = criterion(outputs, labels)
             acc = (torch.argmax(outputs, dim=1) == labels).sum().item()
 
-            train_loss_sum += loss.item() / len(labels)
+            train_loss_sum += loss.item() / len(train_loader.dataset)
             train_acc_sum += acc / len(train_loader.dataset)
 
         # valid
@@ -93,7 +90,7 @@ def eval(args: argparse.Namespace, model, train_loader, valid_loader, criterion)
             loss = criterion(outputs, labels)
             acc = (torch.argmax(outputs, dim=1) == labels).sum().item()
 
-            valid_loss_sum += loss.item() / len(labels)
+            valid_loss_sum += loss.item() / len(valid_loader.dataset)
             valid_acc_sum += acc / len(valid_loader.dataset)
 
     return (train_acc_sum, train_loss_sum, valid_acc_sum, valid_loss_sum)
@@ -112,14 +109,10 @@ def predict_test(args: argparse.Namespace, model, test_loader):
 
             predict_row = outputs.cpu().numpy()
             all_predict_row.append(predict_row)
-            predict_class = [
-                CLASS_LIST[index.item()] for index in torch.argmax(outputs, dim=1)
-            ]
+            predict_class = [CLASS_LIST[index.item()] for index in torch.argmax(outputs, dim=1)]
             all_predict_class.extend(predict_class)
 
-    np.savetxt(
-        f"{args.save_dir}/predict_row.csv", np.vstack(all_predict_row), delimiter=","
-    )
+    np.savetxt(f"{args.save_dir}/predict_row.csv", np.vstack(all_predict_row), delimiter=",")
     np.savetxt(
         f"{args.save_dir}/predict.csv",
         np.array(all_predict_class),
@@ -239,19 +232,19 @@ if __name__ == "__main__":
         choices=["r3d", "r2plus1d", "vgg3d13", "xception"],
         default="xception",
     )
-    parser.add_argument("--device", type=str, choices=["cuda", "mps"], default="mps")
+    parser.add_argument("--device", type=str, choices=["cuda", "mps"], default="cuda")
     parser.add_argument("--epoch", type=int, default=100)
     parser.add_argument("--random_state", type=int, default=42)
     parser.add_argument("--batch_size", type=int, default=32)
     parser.add_argument(
         "--data_dir",
         type=str,
-        default="/home/tsubasa/Competition/Rikkyo/DeePLearningCompetition/data",
+        default="/home/tsubasa/Competition/Rikkyo/VideoClassification/data",
     )
     parser.add_argument(
         "--save_dir",
         type=str,
-        default="/home/tsubasa/Competition/Rikkyo/DeePLearningCompetition/result/pre_train/r3d",
+        default="/home/tsubasa/Competition/Rikkyo/VideoClassification/result/xception01",
     )
     parser.add_argument("--train_size", type=float, default=0.7)
     parser.add_argument("--learning_rate", type=float, default=0.01)
