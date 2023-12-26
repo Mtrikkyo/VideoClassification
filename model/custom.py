@@ -70,9 +70,9 @@ class VideoXception(nn.Module):
         self.resblock2 = ResidualBlock(64, 128)
         self.resblock3 = ResidualBlock(128, 256)
         self.resblock4 = ResidualBlock(256, 512)
-        self.resblock5 = ResidualBlock(512, 512, kernel_size=7, padding=3)
-        self.resblock6 = ResidualBlock(512, 1024, kernel_size=7, padding=3)
-        self.resblock7 = ResidualBlock(1024, 1024, kernel_size=7, padding=3)
+        self.resblock5 = ResidualBlock(512, 512, kernel_size=7, padding=3) # type-B用
+        self.resblock6 = ResidualBlock(512, 1024, kernel_size=7, padding=3) # type-B用
+        self.resblock7 = ResidualBlock(1024, 1024, kernel_size=7, padding=3) # type-B用
 
         self.maxpool = nn.MaxPool3d(kernel_size=(1, 2, 2))  # 時間方向は行わない。
         self.gap = nn.AdaptiveAvgPool3d((1, 1, 1))
@@ -127,14 +127,11 @@ class VideoXception(nn.Module):
 
 
 if __name__ == "__main__":
-    # from torchsummary import summary
-    from torchviz import make_dot
-    import matplotlib.pyplot as plt
-    from torchsummary import summary
+    # summary
+    from torchinfo import summary
 
-    conv = CTSeparableConv3D(3, 64).to("cuda")
-    model = VideoXception("B").to("cuda")
+    model = VideoXception("A").to("cuda")
 
-    summary(model,(3,10,128,128))
+    summary(model,(64,3,10,128,128))
 
 
