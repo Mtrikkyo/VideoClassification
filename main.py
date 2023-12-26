@@ -1,6 +1,7 @@
 import torch
 from torch import optim
 from torch import nn
+from timm.scheduler import CosineLRScheduler
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
@@ -12,14 +13,11 @@ import os
 # custom script
 from utils.seed import seed_worker
 from utils.loader import train_valid_dataloader, test_dataloader
-from model.pretrain import ResNetR3D, ResNetR2Plus1D
 from model.custom import VideoXception
 
 
 # model list
 TRAINABLE_MODEL = {
-    "r3d": ResNetR3D(), # pretrain
-    "r2plus1d": ResNetR2Plus1D(), # pretrain
     "xception": VideoXception(),
 }
 
@@ -44,7 +42,7 @@ CLASS_LIST = [
 ]
 
 
-def train(args: argparse.Namespace, model, train_loader, optimizer, criterion) -> None:
+def train(args: argparse.Namespace, model, train_loader, optimizer, scheduler, criterion) -> None:
     model.train()
     for movies, labels in train_loader:
         labels = labels.view(-1)
@@ -171,8 +169,11 @@ def main(args: argparse.Namespace):
     # setting model
     model = TRAINABLE_MODEL[args.model].to(args.device)
 
-    # criterion & optimizer
-    optimizer = optim.SGD(model.parameters(), lr=args.learning_rate)
+    # optimizer, scheduler & criterion
+    optimizer = optim.AdamW(model.parameters(), lr=args.learning_rate)
+    scheduler = CosineLRScheduler(
+        optimizer, t_initial=args.epoch, lr_min=1e-6, warmup_t=3, warmup_lr_init=1e-6, warmup_prefix=True
+    )
     criterion = nn.CrossEntropyLoss()
 
     # train & eval
@@ -185,6 +186,7 @@ def main(args: argparse.Namespace):
     }
 
     for epoch in tqdm(range(args.epoch)):
+        scheduler.step()
         train(
             args=args,
             model=model,
@@ -229,7 +231,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--model",
         type=str,
-        choices=["r3d", "r2plus1d", "vgg3d13", "xception"],
+        choices=["xception"],
         default="xception",
     )
     parser.add_argument("--device", type=str, choices=["cuda", "mps"], default="cuda")
