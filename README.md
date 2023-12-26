@@ -69,15 +69,130 @@
 今回実装したモデルでは上記 2 種の Separable Convolution を組み合わせて行うことで、省メモリ且つ複雑な表現を可能とする畳み込み層を実装し、これの畳み込みを利用した残差接続ありの CNN モデルを作成した。
 
 ```python
-class CTSeparableCon3D(nn.Sequential):
-
-def __init__(self,) -> None:
-    super().__init__(
-        self.spacewise = nn.Conv3d(
-            in_channels,
-            in_channels,
-
+# 畳み込み層
+class CTSeparableConv3D(nn.Sequential):
+    def __init__(self, in_channels, out_channels, kernel_size=3, stride=1, padding=1):
+        super().__init__(
+            nn.Conv3d(
+                in_channels,
+                in_channels,
+                kernel_size=(1, kernel_size, kernel_size),  # 空間方向の畳み込み
+                stride=(1, stride, stride),
+                padding=(0, padding, padding),
+                groups=in_channels,
+                bias=False,
+            ),
+            nn.BatchNorm3d(in_channels),
+            nn.ReLU(inplace=True),
+            nn.Conv3d(
+                in_channels,
+                in_channels,
+                kernel_size=(kernel_size, 1, 1),  # 時間方向の畳み込み
+                stride=(stride, 1, 1),
+                padding=(padding, 0, 0),
+                groups=in_channels,
+                bias=False,
+            ),
+            nn.BatchNorm3d(in_channels),
+            nn.ReLU(inplace=True),
+            nn.Conv3d(
+                in_channels,
+                out_channels,
+                kernel_size=(1, 1, 1),  # チャネル方向の畳み込み
+                stride=(1, 1, 1),
+                padding=(0, 0, 0),
+                groups=1,
+                bias=False,
+            ),
         )
-    )
-
 ```
+
+残差ブロックの中で，入力は CTSeparableConv3D を 1 層通過したのちに残差と加算される．
+
+このブロックを複数回行う Xception 系のモデルを構築した(VideoXception)．
+
+ブロックの数や，そのカーネルサイズによって複数のタイプを作成した．
+
+<details><summary>type-A</summary><div>
+
+```text
+==========================================================================================
+Layer (type:depth-idx)                   Output Shape              Param #
+==========================================================================================
+VideoXception                            [64, 16]                  --
+├─BatchNorm3d: 1-1                       [64, 3, 10, 128, 128]     6
+├─Conv3d: 1-2                            [64, 3, 10, 128, 128]     12
+├─ResidualBlock: 1-3                     [64, 64, 10, 128, 128]    --
+│    └─CTSeparableConv3D: 2-1            [64, 64, 10, 128, 128]    --
+│    │    └─Conv3d: 3-1                  [64, 3, 10, 128, 128]     27
+│    │    └─BatchNorm3d: 3-2             [64, 3, 10, 128, 128]     6
+│    │    └─ReLU: 3-3                    [64, 3, 10, 128, 128]     --
+│    │    └─Conv3d: 3-4                  [64, 3, 10, 128, 128]     9
+│    │    └─BatchNorm3d: 3-5             [64, 3, 10, 128, 128]     6
+│    │    └─ReLU: 3-6                    [64, 3, 10, 128, 128]     --
+│    │    └─Conv3d: 3-7                  [64, 64, 10, 128, 128]    192
+│    └─Conv3d: 2-2                       [64, 64, 10, 128, 128]    256
+│    └─ReLU: 2-3                         [64, 64, 10, 128, 128]    --
+├─MaxPool3d: 1-4                         [64, 64, 10, 64, 64]      --
+├─ResidualBlock: 1-5                     [64, 128, 10, 64, 64]     --
+│    └─CTSeparableConv3D: 2-4            [64, 128, 10, 64, 64]     --
+│    │    └─Conv3d: 3-8                  [64, 64, 10, 64, 64]      576
+│    │    └─BatchNorm3d: 3-9             [64, 64, 10, 64, 64]      128
+│    │    └─ReLU: 3-10                   [64, 64, 10, 64, 64]      --
+│    │    └─Conv3d: 3-11                 [64, 64, 10, 64, 64]      192
+│    │    └─BatchNorm3d: 3-12            [64, 64, 10, 64, 64]      128
+│    │    └─ReLU: 3-13                   [64, 64, 10, 64, 64]      --
+│    │    └─Conv3d: 3-14                 [64, 128, 10, 64, 64]     8,192
+│    └─Conv3d: 2-5                       [64, 128, 10, 64, 64]     8,320
+│    └─ReLU: 2-6                         [64, 128, 10, 64, 64]     --
+├─MaxPool3d: 1-6                         [64, 128, 10, 32, 32]     --
+├─ResidualBlock: 1-7                     [64, 256, 10, 32, 32]     --
+│    └─CTSeparableConv3D: 2-7            [64, 256, 10, 32, 32]     --
+│    │    └─Conv3d: 3-15                 [64, 128, 10, 32, 32]     1,152
+│    │    └─BatchNorm3d: 3-16            [64, 128, 10, 32, 32]     256
+│    │    └─ReLU: 3-17                   [64, 128, 10, 32, 32]     --
+│    │    └─Conv3d: 3-18                 [64, 128, 10, 32, 32]     384
+│    │    └─BatchNorm3d: 3-19            [64, 128, 10, 32, 32]     256
+│    │    └─ReLU: 3-20                   [64, 128, 10, 32, 32]     --
+│    │    └─Conv3d: 3-21                 [64, 256, 10, 32, 32]     32,768
+│    └─Conv3d: 2-8                       [64, 256, 10, 32, 32]     33,024
+│    └─ReLU: 2-9                         [64, 256, 10, 32, 32]     --
+├─MaxPool3d: 1-8                         [64, 256, 10, 16, 16]     --
+├─ResidualBlock: 1-9                     [64, 512, 10, 16, 16]     --
+│    └─CTSeparableConv3D: 2-10           [64, 512, 10, 16, 16]     --
+│    │    └─Conv3d: 3-22                 [64, 256, 10, 16, 16]     2,304
+│    │    └─BatchNorm3d: 3-23            [64, 256, 10, 16, 16]     512
+│    │    └─ReLU: 3-24                   [64, 256, 10, 16, 16]     --
+│    │    └─Conv3d: 3-25                 [64, 256, 10, 16, 16]     768
+│    │    └─BatchNorm3d: 3-26            [64, 256, 10, 16, 16]     512
+│    │    └─ReLU: 3-27                   [64, 256, 10, 16, 16]     --
+│    │    └─Conv3d: 3-28                 [64, 512, 10, 16, 16]     131,072
+│    └─Conv3d: 2-11                      [64, 512, 10, 16, 16]     131,584
+│    └─ReLU: 2-12                        [64, 512, 10, 16, 16]     --
+├─AdaptiveAvgPool3d: 1-10                [64, 512, 1, 1, 1]        --
+├─Linear: 1-11                           [64, 16]                  8,208
+==========================================================================================
+Total params: 360,850
+Trainable params: 360,850
+Non-trainable params: 0
+Total mult-adds (G): 138.16
+==========================================================================================
+Input size (MB): 125.83
+Forward/backward pass size (MB): 31037.86
+Params size (MB): 1.44
+Estimated Total Size (MB): 31165.13
+==========================================================================================
+```
+
+</div></details>
+
+## Optimizer & Scheduler
+
+### AdamW
+
+
+
+## DataAugmentation
+
+## 検証データの精度
+検証データは，訓練データの3割を使用している．
