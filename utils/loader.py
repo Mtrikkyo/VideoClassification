@@ -1,5 +1,5 @@
 import torch
-from torch.utils.data import Dataset, DataLoader, TensorDataset
+from torch.utils.data import Dataset, DataLoader
 import torchvision
 from torchvision import tv_tensors
 from torchvision.transforms import v2, InterpolationMode
