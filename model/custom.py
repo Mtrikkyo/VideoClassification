@@ -61,17 +61,20 @@ class ResidualBlock(nn.Module):
 class VideoXception(nn.Module):
     def __init__(self):
         super().__init__()
+        self.first_norm = nn.BatchNorm3d(3)
+
         self.input = nn.Conv3d(3, 3, 1, 1, 0, 1)
         self.resblock1 = ResidualBlock(3, 64)
         self.resblock2 = ResidualBlock(64, 128)
         self.resblock3 = ResidualBlock(128, 256)
         self.resblock4 = ResidualBlock(256, 512)
 
-        self.maxpool = nn.MaxPool3d(kernel_size=(1, 2, 2)) # 時間方向は行わない。
+        self.maxpool = nn.MaxPool3d(kernel_size=(1, 2, 2))  # 時間方向は行わない。
         self.gap = nn.AdaptiveAvgPool3d((1, 1, 1))
         self.fc = nn.Linear(512, 16)
 
     def forward(self, x):
+        x = self.first_norm(x)
         x = self.input(x)
         x = self.resblock1(x)
         x = self.maxpool(x)
