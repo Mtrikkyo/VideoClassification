@@ -16,10 +16,7 @@ from utils.loader import train_valid_dataloader, test_dataloader
 from model.custom import VideoXception
 
 
-# model list
-TRAINABLE_MODEL = {
-    "xception": VideoXception(),
-}
+
 
 # class list
 CLASS_LIST = [
@@ -167,7 +164,7 @@ def main(args: argparse.Namespace):
     test_loader = test_dataloader(args=args)
 
     # setting model
-    model = TRAINABLE_MODEL[args.model].to(args.device)
+    model = VideoXception(args.xception_type).to(args.device)
 
     # optimizer, scheduler & criterion
     optimizer = optim.AdamW(model.parameters(), lr=args.learning_rate)
@@ -228,12 +225,7 @@ def main(args: argparse.Namespace):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
-    parser.add_argument(
-        "--model",
-        type=str,
-        choices=["xception"],
-        default="xception",
-    )
+    parser.add_argument("--xception_type", type=str, choices=["A", "B"], default="A")
     parser.add_argument("--device", type=str, choices=["cuda", "mps"], default="cuda")
     parser.add_argument("--epoch", type=int, default=100)
     parser.add_argument("--random_state", type=int, default=42)
@@ -246,7 +238,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--save_dir",
         type=str,
-        default="/home/tsubasa/Competition/Rikkyo/VideoClassification/result/xception01",
+        default="/home/tsubasa/Competition/Rikkyo/VideoClassification/result/xception04",
     )
     parser.add_argument("--train_size", type=float, default=0.7)
     parser.add_argument("--learning_rate", type=float, default=0.01)
