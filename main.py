@@ -42,7 +42,7 @@ CLASS_LIST = [
 ]
 
 
-def train(args: argparse.Namespace, model, train_loader, optimizer, scheduler, criterion) -> None:
+def train(args: argparse.Namespace, model, train_loader, optimizer, criterion) -> None:
     model.train()
     for movies, labels in train_loader:
         labels = labels.view(-1)
@@ -186,7 +186,7 @@ def main(args: argparse.Namespace):
     }
 
     for epoch in tqdm(range(args.epoch)):
-        scheduler.step()
+        scheduler.step(epoch)
         train(
             args=args,
             model=model,
