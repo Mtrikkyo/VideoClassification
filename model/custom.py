@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 
 
-class CTYSeparableConv3D(nn.Sequential):
+class CTSeparableConv3D(nn.Sequential):
     def __init__(self, in_channels, out_channels, kernel_size=3, stride=1, padding=1):
         super().__init__(
             nn.Conv3d(
@@ -43,7 +43,7 @@ class ResidualBlock(nn.Module):
     def __init__(self, in_channels, out_channels, kernel_size=3, stride=1, padding=1):
         super().__init__()
 
-        self.separable_conv = CTYSeparableConv3D(in_channels, out_channels, kernel_size, stride, padding)
+        self.separable_conv = CTSeparableConv3D(in_channels, out_channels, kernel_size, stride, padding)
         self.residual_conv = nn.Conv3d(in_channels, out_channels, 1, stride, 0)
 
         self.relu = nn.ReLU(inplace=True)
@@ -59,8 +59,10 @@ class ResidualBlock(nn.Module):
 
 
 class VideoXception(nn.Module):
-    def __init__(self):
+    def __init__(self, xception_type):
         super().__init__()
+        self.xception_type = xception_type
+
         self.first_norm = nn.BatchNorm3d(3)
 
         self.input = nn.Conv3d(3, 3, 1, 1, 0, 1)
@@ -68,12 +70,16 @@ class VideoXception(nn.Module):
         self.resblock2 = ResidualBlock(64, 128)
         self.resblock3 = ResidualBlock(128, 256)
         self.resblock4 = ResidualBlock(256, 512)
+        self.resblock5 = ResidualBlock(512, 512, kernel_size=7, padding=3)
+        self.resblock6 = ResidualBlock(512, 1024, kernel_size=7, padding=3)
+        self.resblock7 = ResidualBlock(1024, 1024, kernel_size=7, padding=3)
 
         self.maxpool = nn.MaxPool3d(kernel_size=(1, 2, 2))  # 時間方向は行わない。
         self.gap = nn.AdaptiveAvgPool3d((1, 1, 1))
-        self.fc = nn.Linear(512, 16)
+        self.fc_typeA = nn.Linear(512, 16)
+        self.fc_typeB = nn.Linear(1024, 16)
 
-    def forward(self, x):
+    def forward_typeA(self, x):
         x = self.first_norm(x)
         x = self.input(x)
         x = self.resblock1(x)
@@ -85,14 +91,50 @@ class VideoXception(nn.Module):
         x = self.resblock4(x)
         x = self.gap(x)
         x = x.flatten(1)
-        x = self.fc(x)
+        x = self.fc_typeA(x)
+
+        return x
+
+    def forward_typeB(self, x):
+        x = self.first_norm(x)
+        x = self.input(x)
+        x = self.resblock1(x)
+        x = self.maxpool(x)
+        x = self.resblock2(x)
+        x = self.maxpool(x)
+        x = self.resblock3(x)
+        x = self.maxpool(x)
+        x = self.resblock4(x)
+        x = self.maxpool(x)
+        x = self.resblock5(x)
+        x = self.maxpool(x)
+        x = self.resblock6(x)
+        x = self.maxpool(x)
+        x = self.resblock7(x)
+        x = self.gap(x)
+        x = x.flatten(1)
+        x = self.fc_typeB(x)
+
+        return x
+
+    def forward(self, x):
+        if self.xception_type == "A":
+            x = self.forward_typeA(x)
+        elif self.xception_type == "B":
+            x = self.forward_typeB(x)
 
         return x
 
 
 if __name__ == "__main__":
+    # from torchsummary import summary
+    from torchviz import make_dot
+    import matplotlib.pyplot as plt
     from torchsummary import summary
 
-    model = VideoXception().to("cuda")
+    conv = CTSeparableConv3D(3, 64).to("cuda")
+    model = VideoXception("B").to("cuda")
 
-    summary(model, (3, 10, 112, 112))
+    summary(model,(3,10,128,128))
+
+
