@@ -67,7 +67,7 @@ class VideoXception(nn.Module):
         self.resblock3 = ResidualBlock(128, 256)
         self.resblock4 = ResidualBlock(256, 512)
 
-        self.maxpool = nn.MaxPool3d(kernel_size=(1, 2, 2))
+        self.maxpool = nn.MaxPool3d(kernel_size=(1, 2, 2)) # 時間方向は行わない。
         self.gap = nn.AdaptiveAvgPool3d((1, 1, 1))
         self.fc = nn.Linear(512, 16)
 
