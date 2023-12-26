@@ -17,12 +17,7 @@ class TrainValidDataset(Dataset):
             [
                 v2.ToImage(),
                 v2.ToDtype(torch.float32, scale=True),
-                v2.Lambda(lambda x: x.permute(0, 3, 1, 2)),
-                v2.CenterCrop(size=(112, 112)),
-                v2.Normalize(
-                    mean=[0.43216, 0.394666, 0.37645], std=[0.22803, 0.22145, 0.216989]
-                ),
-                v2.Lambda(lambda x: x.permute(1, 0, 2, 3)),
+                v2.Lambda(lambda x: x.permute(3, 0, 1, 2)),
             ]
         )
 
@@ -51,12 +46,7 @@ class TestDataset(Dataset):
             [
                 v2.ToImage(),
                 v2.ToDtype(torch.float32, scale=True),
-                v2.Lambda(lambda x: x.permute(0, 3, 1, 2)),
-                v2.CenterCrop(size=(112, 112)),
-                v2.Normalize(
-                    mean=[0.43216, 0.394666, 0.37645], std=[0.22803, 0.22145, 0.216989]
-                ),
-                v2.Lambda(lambda x: x.permute(1, 0, 2, 3)),
+                v2.Lambda(lambda x: x.permute(3, 0, 1, 2)),
             ]
         )
 
@@ -107,7 +97,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--data_dir",
         type=str,
-        default="/home/tsubasa/Competition/Rikkyo/DeePLearningCompetition/data",
+        default="/home/tsubasa/Competition/Rikkyo/VideoClassification/data",
     )
     parser.add_argument("--train_size", type=float, default=0.7)
     parser.add_argument("--random_state", type=int, default=42)
@@ -118,4 +108,4 @@ if __name__ == "__main__":
 
     test_loader = test_dataloader(args)
 
-    print(len(test_loader.dataset))
+    print(test_loader.dataset[0].shape)
