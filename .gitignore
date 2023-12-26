@@ -1,7 +1,0 @@
-data/
-.venv/
-pyproject.toml
-requirements.lock
-requirements-dev.lock
-.python-version
-src/
