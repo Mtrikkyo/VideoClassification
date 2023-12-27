@@ -1,10 +1,10 @@
 python3 main.py \
---model xception \
+--xception_type A \
 --device cuda \
---epoch 100 \
+--epoch 1000 \
 --random_state 42 \
---batch_size 32 \
---data_dir /Data/data \
---save_dir /Data/result/custom/xception01 \
+--batch_size 64 \
+--data_dir /workspace/data \
+--save_dir /workspace/result/typeA/try01 \
 --train_size 0.7 \
---learning_rate 0.001 \
+--learning_rate 0.01 \
