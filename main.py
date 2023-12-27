@@ -13,9 +13,8 @@ import os
 # custom script
 from utils.seed import seed_worker
 from utils.loader import train_valid_dataloader, test_dataloader
+from utils.pytorchtools import EarlyStopping
 from model.custom import VideoXception
-
-
 
 
 # class list
@@ -93,7 +92,8 @@ def eval(args: argparse.Namespace, model, train_loader, valid_loader, criterion)
 
 def predict_test(args: argparse.Namespace, test_loader):
     model = VideoXception(args.xception_type).to(args.device)
-    model.load_state_dict(torch.load(f"{args.save_dir}/best_model.pth")) # best loss model
+    model.load_state_dict(torch.load(
+        f"{args.save_dir}/best_model.pth"))  # best loss model
     model.eval()
 
     with torch.no_grad():
@@ -106,10 +106,12 @@ def predict_test(args: argparse.Namespace, test_loader):
 
             predict_row = outputs.cpu().numpy()
             all_predict_row.append(predict_row)
-            predict_class = [CLASS_LIST[index.item()] for index in torch.argmax(outputs, dim=1)]
+            predict_class = [CLASS_LIST[index.item()]
+                             for index in torch.argmax(outputs, dim=1)]
             all_predict_class.extend(predict_class)
 
-    np.savetxt(f"{args.save_dir}/predict_row.csv", np.vstack(all_predict_row), delimiter=",")
+    np.savetxt(f"{args.save_dir}/predict_row.csv",
+               np.vstack(all_predict_row), delimiter=",")
     np.savetxt(
         f"{args.save_dir}/predict.csv",
         np.array(all_predict_class),
@@ -133,16 +135,16 @@ def save_model_weight(args, epoch, model, history):
 def plot_history(args, history: dict) -> None:
     acc_fig, acc_ax = plt.subplots()
 
-    acc_ax.plot(range(args.epoch), history["train_acc"], label="train")
-    acc_ax.plot(range(args.epoch), history["valid_acc"], label="valid")
+    acc_ax.plot(history["epoch"], history["train_acc"], label="train")
+    acc_ax.plot(history["epoch"], history["valid_acc"], label="valid")
     acc_ax.set_xlabel("epoch")
     acc_ax.set_ylabel("acc")
     plt.legend()
     plt.savefig(f"{args.save_dir}/acc.png")
 
     loss_fig, loss_ax = plt.subplots()
-    loss_ax.plot(range(args.epoch), history["train_loss"], label="train")
-    loss_ax.plot(range(args.epoch), history["valid_loss"], label="valid")
+    loss_ax.plot(history["epoch"], history["train_loss"], label="train")
+    loss_ax.plot(history["epoch"], history["valid_loss"], label="valid")
     loss_ax.set_xlabel("epoch")
     loss_ax.set_ylabel("loss")
     plt.legend()
@@ -174,6 +176,10 @@ def main(args: argparse.Namespace):
         optimizer, t_initial=args.epoch, lr_min=1e-6, warmup_t=3, warmup_lr_init=1e-6, warmup_prefix=True
     )
     criterion = nn.CrossEntropyLoss()
+
+    # early_stopping
+    early_stopping = EarlyStopping(
+        patience=args.early_stop_round, verbose=True)
 
     # train & eval
     history = {
@@ -214,8 +220,15 @@ def main(args: argparse.Namespace):
 
         save_model_weight(args=args, epoch=epoch, model=model, history=history)
 
+        early_stopping(valid_loss_per_epoch, model)
+
+        if early_stopping.early_stop:
+            print("Early stopping")
+            history["epoch"] = [i for i in range(epoch+1)]
+            break
+
     # predict test_data
-    predict_test(args=args, model=model, test_loader=test_loader)
+    predict_test(args=args, test_loader=test_loader)
 
     # plot history
     plot_history(args, history=history)
@@ -227,20 +240,23 @@ def main(args: argparse.Namespace):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("--xception_type", type=str, choices=["A", "B"], default="A")
-    parser.add_argument("--device", type=str, choices=["cuda", "mps"], default="cuda")
-    parser.add_argument("--epoch", type=int, default=100)
-    parser.add_argument("--random_state", type=int, default=42)
-    parser.add_argument("--batch_size", type=int, default=32)
+    parser.add_argument("--xception_type", type=str,
+                        choices=["A", "B"], default="A")
+    parser.add_argument("--device", type=str,
+                        choices=["cuda", "mps"], default="cuda",)
+    parser.add_argument("--epoch", type=int, default=1000,)
+    parser.add_argument("--early_stop_round", type=int, default=1,)
+    parser.add_argument("--random_state", type=int, default=42,)
+    parser.add_argument("--batch_size", type=int, default=64,)
     parser.add_argument(
         "--data_dir",
         type=str,
-        default="/home/tsubasa/Competition/Rikkyo/VideoClassification/data",
+        default="/workspace/data",
     )
     parser.add_argument(
         "--save_dir",
         type=str,
-        default="/home/tsubasa/Competition/Rikkyo/VideoClassification/result/xception04",
+        default="/workspace/result/tmp",
     )
     parser.add_argument("--train_size", type=float, default=0.7)
     parser.add_argument("--learning_rate", type=float, default=0.01)
