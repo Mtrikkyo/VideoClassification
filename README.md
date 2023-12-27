@@ -1,6 +1,17 @@
 # videoclassification
+本リポジトリは、立教大学大学院人工知能科学研究科の必修科目，深層学習(2023)の課題として出題された動画分類コンペティションに提出したモデルをまとめたものである.
+
+今回作成したモデルは検証データにおける正答率が　となっており，コンペティションでの成績は　であった．
+
+## コンペに用いるデータセット
+
+ 人間の行動を101クラスに分けたデータセットである[UCF-101](https://arxiv.org/abs/1212.0402)のうち，
+ ```text
+     "BandMarching","BenchPress","Bowling","BoxingPunchingBag","CricketShot","Drumming","HorseRiding","IceDancing","PlayingCello","PlayingDaf","PlayingDhol","PlayingGuitar","PlayingSitar","Punch","ShavingBeard","TennisSwing"
+ ```
 
 ## 参考にしたモデルアーキテクチャ
+モデルを作成するにあたって，以下の二つを参考にした.
 
 1. ### VideoResNet(参考文献：[A Closer Look at Spatiotemporal Convolutions for Action Recognition](https://arxiv.org/abs/1711.11248))
 
