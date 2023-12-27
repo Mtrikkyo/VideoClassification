@@ -70,7 +70,7 @@ def eval(args: argparse.Namespace, model, train_loader, valid_loader, criterion)
             loss = criterion(outputs, labels)
             acc = (torch.argmax(outputs, dim=1) == labels).sum().item()
 
-            train_loss_sum += loss.item() / len(train_loader.dataset)
+            train_loss_sum += loss.item() / len(train_loader)
             train_acc_sum += acc / len(train_loader.dataset)
 
         # valid
@@ -84,7 +84,7 @@ def eval(args: argparse.Namespace, model, train_loader, valid_loader, criterion)
             loss = criterion(outputs, labels)
             acc = (torch.argmax(outputs, dim=1) == labels).sum().item()
 
-            valid_loss_sum += loss.item() / len(valid_loader.dataset)
+            valid_loss_sum += loss.item() / len(valid_loader)
             valid_acc_sum += acc / len(valid_loader.dataset)
 
     return (train_acc_sum, train_loss_sum, valid_acc_sum, valid_loss_sum)
