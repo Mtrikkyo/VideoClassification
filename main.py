@@ -91,7 +91,9 @@ def eval(args: argparse.Namespace, model, train_loader, valid_loader, criterion)
     return (train_acc_sum, train_loss_sum, valid_acc_sum, valid_loss_sum)
 
 
-def predict_test(args: argparse.Namespace, model, test_loader):
+def predict_test(args: argparse.Namespace, test_loader):
+    model = VideoXception(args.xception_type).to(args.device)
+    model.load_state_dict(torch.load(f"{args.save_dir}/best_model.pth")) # best loss model
     model.eval()
 
     with torch.no_grad():
