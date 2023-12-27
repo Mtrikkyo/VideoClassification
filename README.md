@@ -9,7 +9,9 @@
  ```text
      "BandMarching","BenchPress","Bowling","BoxingPunchingBag","CricketShot","Drumming","HorseRiding","IceDancing","PlayingCello","PlayingDaf","PlayingDhol","PlayingGuitar","PlayingSitar","Punch","ShavingBeard","TennisSwing"
  ```
-
+ の16クラスのみを用いた．UCF-101では、時間方向のサイズがバラバラであるが、今回のデータセットは、画像のサイズを一律で，
+ $$(C,T,H,W)=(3,10,128,128)$$
+に加工されている.
 ## 参考にしたモデルアーキテクチャ
 モデルを作成するにあたって，以下の二つを参考にした.
 
