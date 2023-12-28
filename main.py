@@ -91,7 +91,7 @@ def eval(args: argparse.Namespace, model, train_loader, valid_loader, criterion)
     return (train_acc_sum, train_loss_sum, valid_acc_sum, valid_loss_sum)
 
 
-def predict_test(args: argparse.Namespace, test_loader):
+def predict_test(args: argparse.Namespace, test_loader) -> None:
     model = VideoXception(args.xception_type).to(args.device)
     model.load_state_dict(torch.load(
         f"{args.save_dir}/best_model.pt"))  # best loss model
@@ -119,18 +119,6 @@ def predict_test(args: argparse.Namespace, test_loader):
         delimiter=",",
         fmt="%s",
     )
-
-
-# def save_model_weight(args, epoch, model, history):
-#     if epoch >= 1 and max(history["valid_loss"]) == history["valid_loss"][-1]:
-#         # save weight
-#         torch.save(model.state_dict(), f"{args.save_dir}/best_model.pth")
-
-#     elif epoch == 0:
-#         torch.save(model.state_dict(), f"{args.save_dir}/best_model.pth")
-
-#     elif epoch == args.epoch - 1:
-#         torch.save(model.state_dict(), f"{args.save_dir}/last_model.pth")
 
 
 def plot_history(args, history: dict) -> None:
@@ -218,8 +206,6 @@ def main(args: argparse.Namespace):
         history["train_loss"].append(train_loss_per_epoch)
         history["valid_acc"].append(valid_acc_per_epoch)
         history["valid_loss"].append(valid_loss_per_epoch)
-
-        # save_model_weight(args=args, epoch=epoch, model=model, history=history)
 
         early_stopping(valid_loss_per_epoch, model)
         sys.stdout.flush()
