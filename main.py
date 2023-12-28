@@ -162,7 +162,7 @@ def main(args: argparse.Namespace):
     # optimizer, scheduler & criterion
     optimizer = optim.AdamW(model.parameters(), lr=args.learning_rate)
     scheduler = CosineLRScheduler(
-        optimizer, t_initial=args.epoch, lr_min=1e-6, warmup_t=3, warmup_lr_init=1e-6, warmup_prefix=True
+        optimizer, t_initial=args.epoch, lr_min=1e-6, warmup_t=args.warmup_t, warmup_lr_init=1e-6, warmup_prefix=True
     )
     criterion = nn.CrossEntropyLoss()
 
@@ -249,6 +249,7 @@ if __name__ == "__main__":
     )
     parser.add_argument("--train_size", type=float, default=0.7)
     parser.add_argument("--learning_rate", type=float, default=0.01)
+    parser.add_argument("--warmup_t", type=int, default=3)
 
     args = parser.parse_args()
 
