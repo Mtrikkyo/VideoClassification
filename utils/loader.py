@@ -77,8 +77,10 @@ def train_valid_dataloader(args: argparse.Namespace):
         train_size=args.train_size,
     )
 
-    train_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True)
-    valid_loader = DataLoader(valid_dataset, batch_size=args.batch_size, shuffle=True)
+    train_loader = DataLoader(
+        train_dataset, batch_size=args.batch_size, shuffle=True)
+    valid_loader = DataLoader(
+        valid_dataset, batch_size=args.batch_size, shuffle=True)
 
     return (train_loader, valid_loader)
 
@@ -86,7 +88,8 @@ def train_valid_dataloader(args: argparse.Namespace):
 def test_dataloader(args=argparse.Namespace):
     test_dataset = TestDataset(args)
 
-    test_loader = DataLoader(test_dataset, batch_size=args.batch_size, shuffle=False)
+    test_loader = DataLoader(
+        test_dataset, batch_size=args.batch_size, shuffle=False)
 
     return test_loader
 
@@ -97,7 +100,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--data_dir",
         type=str,
-        default="/home/tsubasa/Competition/Rikkyo/VideoClassification/data",
+        default="/workspace/data",
     )
     parser.add_argument("--train_size", type=float, default=0.7)
     parser.add_argument("--random_state", type=int, default=42)
