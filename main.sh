@@ -1,10 +1,13 @@
 python3 main.py \
 --xception_type A \
 --device cuda \
---epoch 1000 \
+--epoch 10000 \
+--early_stop_round 500 \
 --random_state 42 \
 --batch_size 64 \
 --data_dir /workspace/data \
---save_dir /workspace/result/typeA/try01 \
+--save_dir /workspace/result/typeA/try04 \
 --train_size 0.7 \
 --learning_rate 0.01 \
+--warmup_t 100 \
+--rotation 10 \
