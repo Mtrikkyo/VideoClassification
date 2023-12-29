@@ -91,7 +91,7 @@ class TestDataset(Dataset):
         return X
 
 
-def train_dataloader(X, y, transform):
+def train_dataloader(args, X, y, transform):
     train_dataset = TrainDataset(X, y, transform)
 
     train_loader = DataLoader(
@@ -100,7 +100,7 @@ def train_dataloader(X, y, transform):
     return train_loader
 
 
-def valid_dataloader(X, y):
+def valid_dataloader(args, X, y):
     valid_dataset = ValidDataset(X, y)
 
     valid_loader = DataLoader(
@@ -109,7 +109,7 @@ def valid_dataloader(X, y):
     return valid_loader
 
 
-def test_dataloader(X):
+def test_dataloader(args, X):
     test_dataset = TestDataset(X)
 
     test_loader = DataLoader(
@@ -144,7 +144,8 @@ if __name__ == "__main__":
         [
             v2.ToImage(),
             v2.ToDtype(torch.float32, scale=True),
-            v2.Lambda(lambda x: x.permute(3, 0, 1, 2))
+            v2.Lambda(lambda x: x.permute(3, 0, 1, 2)),
+            v2.RandomRotation(30)
         ]
     ))
     valid_loader = valid_dataloader(X=valid_X, y=valid_y)
