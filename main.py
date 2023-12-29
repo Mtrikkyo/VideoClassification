@@ -1,11 +1,13 @@
 import torch
 from torch import optim
 from torch import nn
+from torchvision.transforms import v2
 from timm.scheduler import CosineLRScheduler
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
 import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
 
 import argparse
 import os
@@ -13,7 +15,7 @@ import sys
 
 # custom script
 from utils.seed import seed_worker
-from utils.loader import train_valid_dataloader, test_dataloader
+from utils.loader import train_dataloader, valid_dataloader, test_dataloader
 from utils.pytorchtools import EarlyStopping
 from model.custom import VideoXception
 
@@ -153,8 +155,35 @@ def main(args: argparse.Namespace):
     os.makedirs(name=args.save_dir)
 
     # load data
-    train_loader, valid_loader = train_valid_dataloader(args)
-    test_loader = test_dataloader(args=args)
+    train_X = np.load(f"{args.data_dir}/x_train_report.npy")
+    train_y = np.load(f"{args.data_dir}/y_train_report.npy")
+    test_X = np.load(f"{args.data_dir}/x_test_report.npy")
+
+    # data split
+    train_X, valid_X, train_y, valid_y = train_test_split(train_X, train_y, shuffle=True,
+                                                          random_state=args.random_state,
+                                                          train_size=args.train_size)
+
+    # transform of train data
+
+    train_transform_list = [
+        v2.ToImage(),
+        v2.ToDtype(torch.float32, scale=True),
+        v2.Lambda(lambda x: x.permute(3, 0, 1, 2))
+    ]
+
+    # augmentation
+    if args.rotation is not None:
+        train_transform_list.append(v2.RandomRotation(args.rotation))
+
+    if args.h_flip:
+        train_transform_list.append(v2.RandomHorizontalFlip())
+
+    # loader_class
+    train_loader = train_dataloader(
+        args=args, X=train_X, y=train_y, transform=v2.Compose(train_transform_list))
+    valid_loader = valid_dataloader(args=args, X=valid_X, y=valid_y)
+    test_loader = test_dataloader(args=args, X=test_X)
 
     # setting model
     model = VideoXception(args.xception_type).to(args.device)
@@ -250,6 +279,8 @@ if __name__ == "__main__":
     parser.add_argument("--train_size", type=float, default=0.7)
     parser.add_argument("--learning_rate", type=float, default=0.01)
     parser.add_argument("--warmup_t", type=int, default=3)
+    parser.add_argument("--rotation", type=int, default=None)
+    parser.add_argument("--h_flip", action="store_true")
 
     args = parser.parse_args()
 
