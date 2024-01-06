@@ -212,12 +212,17 @@ Estimated Total Size (MB): 31165.13
 ## Optimizer & Scheduler
 
 ### AdamW
+(執筆中)
 
 ### CosineLRScheduler
-
+(執筆中)
 
 
 ## DataAugmentation
+(執筆中)
 
 ## 検証データの精度
 検証データは，訓練データの3割を使用している．
+
+## リソース
+NVIDIA RTX A5000(24564MiB)
